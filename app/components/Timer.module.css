@@ -1,0 +1,136 @@
+.timer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  transition: all 0.3s ease;
+}
+
+.timer.active {
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 0 30px rgba(var(--participant-color), 0.3);
+  transform: scale(1.02);
+}
+
+.timer.small {
+  padding: 1rem 1.5rem;
+  min-width: 150px;
+}
+
+.timer.large {
+  padding: 2rem 3rem;
+  min-width: 400px;
+}
+
+.name {
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 0.5rem;
+}
+
+.timer.small .name {
+  font-size: 0.9rem;
+}
+
+.timer.large .name {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.time {
+  font-family: 'Courier New', monospace;
+  font-weight: bold;
+  color: var(--timer-color);
+  transition: color 0.3s ease;
+}
+
+.timer.small .time {
+  font-size: 2rem;
+}
+
+.timer.large .time {
+  font-size: 8rem;
+  text-shadow: 0 0 40px var(--timer-color);
+}
+
+/* Fullscreen mode - even larger */
+:fullscreen .timer.large .name {
+  font-size: 3rem;
+  margin-bottom: 2rem;
+}
+
+:fullscreen .timer.large .time {
+  font-size: 18rem;
+  text-shadow: 0 0 80px var(--timer-color);
+}
+
+:fullscreen .timer.large {
+  padding: 3rem 5rem;
+  min-width: 600px;
+}
+
+:fullscreen .progressBar {
+  height: 16px;
+  margin-top: 3rem;
+  max-width: 800px;
+}
+
+:fullscreen .timer.large .timeUp {
+  font-size: 3rem;
+  margin-top: 2rem;
+}
+
+.progressBar {
+  width: 100%;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  margin-top: 1.5rem;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 1s linear, background-color 0.3s ease;
+}
+
+.timeUp {
+  color: #e74c3c;
+  font-weight: bold;
+  font-size: 1rem;
+  margin-top: 0.5rem;
+  animation: pulse 0.5s ease-in-out infinite;
+}
+
+.timer.large .timeUp {
+  font-size: 1.5rem;
+  margin-top: 1rem;
+}
+
+/* Blink animation for last 10 seconds */
+.blink .time {
+  animation: blink 0.5s ease-in-out infinite;
+}
+
+@keyframes blink {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}

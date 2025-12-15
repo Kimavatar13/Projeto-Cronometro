@@ -1,0 +1,139 @@
+/* [project]/app/components/Timer.module.css [app-client] (css) */
+.Timer-module__hiLHka__timer {
+  background: #ffffff0d;
+  border-radius: 12px;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 1rem;
+  transition: all .3s;
+  display: flex;
+}
+
+.Timer-module__hiLHka__timer.Timer-module__hiLHka__active {
+  box-shadow: 0 0 30px rgba(var(--participant-color), .3);
+  background: #ffffff1a;
+  transform: scale(1.02);
+}
+
+.Timer-module__hiLHka__timer.Timer-module__hiLHka__small {
+  min-width: 150px;
+  padding: 1rem 1.5rem;
+}
+
+.Timer-module__hiLHka__timer.Timer-module__hiLHka__large {
+  min-width: 400px;
+  padding: 2rem 3rem;
+}
+
+.Timer-module__hiLHka__name {
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: .5rem;
+  font-weight: 600;
+}
+
+.Timer-module__hiLHka__timer.Timer-module__hiLHka__small .Timer-module__hiLHka__name {
+  font-size: .9rem;
+}
+
+.Timer-module__hiLHka__timer.Timer-module__hiLHka__large .Timer-module__hiLHka__name {
+  margin-bottom: 1rem;
+  font-size: 1.5rem;
+}
+
+.Timer-module__hiLHka__time {
+  color: var(--timer-color);
+  font-family: Courier New, monospace;
+  font-weight: bold;
+  transition: color .3s;
+}
+
+.Timer-module__hiLHka__timer.Timer-module__hiLHka__small .Timer-module__hiLHka__time {
+  font-size: 2rem;
+}
+
+.Timer-module__hiLHka__timer.Timer-module__hiLHka__large .Timer-module__hiLHka__time {
+  text-shadow: 0 0 40px var(--timer-color);
+  font-size: 8rem;
+}
+
+:fullscreen .Timer-module__hiLHka__timer.Timer-module__hiLHka__large .Timer-module__hiLHka__name {
+  margin-bottom: 2rem;
+  font-size: 3rem;
+}
+
+:fullscreen .Timer-module__hiLHka__timer.Timer-module__hiLHka__large .Timer-module__hiLHka__time {
+  text-shadow: 0 0 80px var(--timer-color);
+  font-size: 18rem;
+}
+
+:fullscreen .Timer-module__hiLHka__timer.Timer-module__hiLHka__large {
+  min-width: 600px;
+  padding: 3rem 5rem;
+}
+
+:fullscreen .Timer-module__hiLHka__progressBar {
+  max-width: 800px;
+  height: 16px;
+  margin-top: 3rem;
+}
+
+:fullscreen .Timer-module__hiLHka__timer.Timer-module__hiLHka__large .Timer-module__hiLHka__timeUp {
+  margin-top: 2rem;
+  font-size: 3rem;
+}
+
+.Timer-module__hiLHka__progressBar {
+  background: #ffffff1a;
+  border-radius: 4px;
+  width: 100%;
+  height: 8px;
+  margin-top: 1.5rem;
+  overflow: hidden;
+}
+
+.Timer-module__hiLHka__progressFill {
+  border-radius: 4px;
+  height: 100%;
+  transition: width 1s linear, background-color .3s;
+}
+
+.Timer-module__hiLHka__timeUp {
+  color: #e74c3c;
+  margin-top: .5rem;
+  font-size: 1rem;
+  font-weight: bold;
+  animation: .5s ease-in-out infinite Timer-module__hiLHka__pulse;
+}
+
+.Timer-module__hiLHka__timer.Timer-module__hiLHka__large .Timer-module__hiLHka__timeUp {
+  margin-top: 1rem;
+  font-size: 1.5rem;
+}
+
+.Timer-module__hiLHka__blink .Timer-module__hiLHka__time {
+  animation: .5s ease-in-out infinite Timer-module__hiLHka__blink;
+}
+
+@keyframes Timer-module__hiLHka__blink {
+  0%, 100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: .3;
+  }
+}
+
+@keyframes Timer-module__hiLHka__pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+/*# sourceMappingURL=app_components_Timer_module_css_bad6b30c._.single.css.map*/

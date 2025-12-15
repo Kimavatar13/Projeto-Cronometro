@@ -1,0 +1,314 @@
+.controls {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  padding: 1.5rem;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.status {
+  background: rgba(255, 255, 255, 0.05);
+  padding: 1.5rem;
+  border-radius: 12px;
+}
+
+.status h2 {
+  margin: 0 0 1rem 0;
+  font-size: 1.2rem;
+  color: #888;
+}
+
+.statusInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.statusBadge {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-weight: bold;
+  font-size: 0.9rem;
+  width: fit-content;
+}
+
+.statusBadge.running {
+  background: rgba(46, 204, 113, 0.2);
+  color: #2ecc71;
+}
+
+.statusBadge.paused {
+  background: rgba(243, 156, 18, 0.2);
+  color: #f39c12;
+}
+
+.statusBadge.stopped {
+  background: rgba(149, 165, 166, 0.2);
+  color: #95a5a6;
+}
+
+.currentSpeaker {
+  font-size: 1rem;
+  color: #ccc;
+}
+
+.globalControls {
+  background: rgba(255, 255, 255, 0.05);
+  padding: 1.5rem;
+  border-radius: 12px;
+}
+
+.globalControls h3 {
+  margin: 0 0 1rem 0;
+  font-size: 1rem;
+  color: #888;
+}
+
+.buttonGroup {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.btn {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.btn:active {
+  transform: translateY(0);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn.small {
+  padding: 0.5rem 0.75rem;
+  font-size: 0.85rem;
+}
+
+.btn.primary {
+  background: #3498db;
+  color: white;
+}
+
+.btn.success {
+  background: #2ecc71;
+  color: white;
+}
+
+.btn.warning {
+  background: #f39c12;
+  color: white;
+}
+
+.btn.danger {
+  background: #e74c3c;
+  color: white;
+}
+
+.btn.secondary {
+  background: #7f8c8d;
+  color: white;
+}
+
+.participantsList {
+  background: rgba(255, 255, 255, 0.05);
+  padding: 1.5rem;
+  border-radius: 12px;
+}
+
+.participantsList h3 {
+  margin: 0 0 1rem 0;
+  font-size: 1rem;
+  color: #888;
+}
+
+.participantCard {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 8px;
+  border-left: 4px solid;
+  transition: all 0.2s ease;
+}
+
+.participantCard:last-child {
+  margin-bottom: 0;
+}
+
+.participantCard.active {
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+}
+
+.participantInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.participantName {
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.participantTime {
+  font-family: 'Courier New', monospace;
+  font-size: 0.9rem;
+  color: #888;
+}
+
+.participantActions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.activeLabel {
+  background: rgba(46, 204, 113, 0.2);
+  color: #2ecc71;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  font-weight: bold;
+  font-size: 0.75rem;
+  animation: pulse 1s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+.addParticipant {
+  background: rgba(255, 255, 255, 0.05);
+  padding: 1.5rem;
+  border-radius: 12px;
+}
+
+.addParticipant h3 {
+  margin: 0 0 1rem 0;
+  font-size: 1rem;
+  color: #888;
+}
+
+.addForm {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.input {
+  padding: 0.75rem 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  color: white;
+  font-size: 1rem;
+}
+
+.input:focus {
+  outline: none;
+  border-color: #3498db;
+}
+
+.timeInput {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.timeInput label {
+  font-size: 0.9rem;
+  color: #888;
+}
+
+.colorPicker {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.colorPicker label {
+  font-size: 0.9rem;
+  color: #888;
+}
+
+.colors {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.colorBtn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 3px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.colorBtn:hover {
+  transform: scale(1.1);
+}
+
+.colorBtn.selected {
+  border-color: white;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+}
+
+/* Edit Time Styles */
+.participantTime {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.participantTime:hover {
+  color: #3498db;
+}
+
+.editTimeRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.editTimeInput {
+  width: 80px;
+  padding: 0.4rem 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.editTimeInput:focus {
+  outline: none;
+  border-color: #3498db;
+}
+
+.editTimeLabel {
+  font-size: 0.8rem;
+  color: #888;
+}

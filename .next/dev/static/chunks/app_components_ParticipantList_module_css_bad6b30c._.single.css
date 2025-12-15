@@ -1,0 +1,54 @@
+/* [project]/app/components/ParticipantList.module.css [app-client] (css) */
+.ParticipantList-module__22A59q__list {
+  background: #ffffff08;
+  border-radius: 16px;
+  height: fit-content;
+  padding: 1.5rem;
+}
+
+.ParticipantList-module__22A59q__title {
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  text-align: center;
+  margin: 0 0 1rem;
+  font-size: 1rem;
+}
+
+.ParticipantList-module__22A59q__participants {
+  flex-direction: column;
+  gap: 1rem;
+  display: flex;
+}
+
+.ParticipantList-module__22A59q__participantCard {
+  transition: all .3s;
+}
+
+.ParticipantList-module__22A59q__participantCard:hover {
+  transform: translateX(5px);
+}
+
+.ParticipantList-module__22A59q__empty {
+  text-align: center;
+  color: #666;
+  padding: 2rem;
+  font-style: italic;
+}
+
+@media (max-width: 1200px) {
+  .ParticipantList-module__22A59q__list {
+    padding: 1rem;
+  }
+
+  .ParticipantList-module__22A59q__participants {
+    flex-flow: wrap;
+    justify-content: center;
+  }
+
+  .ParticipantList-module__22A59q__participantCard {
+    flex: none;
+  }
+}
+
+/*# sourceMappingURL=app_components_ParticipantList_module_css_bad6b30c._.single.css.map*/
