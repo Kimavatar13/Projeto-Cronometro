@@ -7,12 +7,12 @@
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.05);
   transition: all 0.3s ease;
+  width: 100%;
 }
 
 .timer.active {
   background: rgba(255, 255, 255, 0.1);
   box-shadow: 0 0 30px rgba(var(--participant-color), 0.3);
-  transform: scale(1.02);
 }
 
 .timer.small {
@@ -22,7 +22,8 @@
 
 .timer.large {
   padding: 2rem 3rem;
-  min-width: 400px;
+  min-width: 300px;
+  max-width: 100%;
 }
 
 .name {
@@ -30,6 +31,7 @@
   text-transform: uppercase;
   letter-spacing: 2px;
   margin-bottom: 0.5rem;
+  text-align: center;
 }
 
 .timer.small .name {
@@ -53,35 +55,35 @@
 }
 
 .timer.large .time {
-  font-size: 8rem;
+  font-size: clamp(3rem, 10vw, 8rem);
   text-shadow: 0 0 40px var(--timer-color);
 }
 
-/* Fullscreen mode - even larger */
+/* Fullscreen mode - responsive sizing */
 :fullscreen .timer.large .name {
-  font-size: 3rem;
-  margin-bottom: 2rem;
+  font-size: clamp(1.5rem, 4vw, 3rem);
+  margin-bottom: 1rem;
 }
 
 :fullscreen .timer.large .time {
-  font-size: 18rem;
+  font-size: clamp(4rem, 15vw, 14rem);
   text-shadow: 0 0 80px var(--timer-color);
 }
 
 :fullscreen .timer.large {
-  padding: 3rem 5rem;
-  min-width: 600px;
+  padding: 2rem;
+  min-width: auto;
 }
 
 :fullscreen .progressBar {
-  height: 16px;
-  margin-top: 3rem;
-  max-width: 800px;
+  height: 12px;
+  margin-top: 2rem;
+  max-width: 600px;
 }
 
 :fullscreen .timer.large .timeUp {
-  font-size: 3rem;
-  margin-top: 2rem;
+  font-size: clamp(1.5rem, 4vw, 3rem);
+  margin-top: 1rem;
 }
 
 .progressBar {

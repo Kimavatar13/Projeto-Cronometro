@@ -5,13 +5,14 @@ export interface Participant {
   total_time: number; // in seconds
   remaining_time: number; // in seconds
   color?: string;
+  has_spoken?: boolean; // Track if participant has already spoken
 }
 
 // Timer state type
 export interface TimerState {
   id: string;
   current_speaker_id: string | null;
-  status: 'running' | 'paused' | 'stopped';
+  status: 'running' | 'paused' | 'stopped' | 'finished';
   started_at: string | null; // ISO timestamp
   updated_at: string;
 }

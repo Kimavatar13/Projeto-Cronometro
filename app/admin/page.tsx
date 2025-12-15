@@ -20,6 +20,7 @@ export default function AdminPage() {
     addParticipant,
     removeParticipant,
     updateParticipantTime,
+    updateParticipantName,
   } = useDebateTimer();
 
   if (isLoading) {
@@ -59,6 +60,7 @@ export default function AdminPage() {
           onAddParticipant={addParticipant}
           onRemoveParticipant={removeParticipant}
           onUpdateParticipantTime={updateParticipantTime}
+          onUpdateParticipantName={updateParticipantName}
         />
       </div>
     </main>

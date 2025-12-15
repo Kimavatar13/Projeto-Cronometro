@@ -1,15 +1,15 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Participant, TimerState, ParticipantRow, TimerStateRow } from './types';
 import { getSupabase, isSupabaseConfigured } from './supabase';
 
 // Default participants for demo mode
 const defaultParticipants: Participant[] = [
-  { id: '1', name: 'Grupo A', total_time: 120, remaining_time: 120, color: '#3498db' },
-  { id: '2', name: 'Grupo B', total_time: 120, remaining_time: 120, color: '#e74c3c' },
-  { id: '3', name: 'Grupo C', total_time: 120, remaining_time: 120, color: '#2ecc71' },
-  { id: '4', name: 'Grupo D', total_time: 120, remaining_time: 120, color: '#f39c12' },
+  { id: '1', name: 'Grupo A', total_time: 120, remaining_time: 120, color: '#3498db', has_spoken: false },
+  { id: '2', name: 'Grupo B', total_time: 120, remaining_time: 120, color: '#e74c3c', has_spoken: false },
+  { id: '3', name: 'Grupo C', total_time: 120, remaining_time: 120, color: '#2ecc71', has_spoken: false },
+  { id: '4', name: 'Grupo D', total_time: 120, remaining_time: 120, color: '#f39c12', has_spoken: false },
 ];
 
 const defaultTimerState: TimerState = {
@@ -20,11 +20,46 @@ const defaultTimerState: TimerState = {
   updated_at: new Date().toISOString(),
 };
 
+// Web Audio API beep sound generator
+const playBeepSound = () => {
+  if (typeof window === 'undefined') return;
+  
+  try {
+    const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+    
+    // Play 3 beeps
+    const playBeep = (startTime: number, frequency: number, duration: number) => {
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      oscillator.frequency.value = frequency;
+      oscillator.type = 'sine';
+      
+      gainNode.gain.setValueAtTime(0.5, startTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + duration);
+      
+      oscillator.start(startTime);
+      oscillator.stop(startTime + duration);
+    };
+    
+    const now = audioContext.currentTime;
+    playBeep(now, 880, 0.2);
+    playBeep(now + 0.3, 880, 0.2);
+    playBeep(now + 0.6, 1100, 0.4);
+  } catch (err) {
+    console.log('Audio not supported:', err);
+  }
+};
+
 export function useDebateTimer() {
   const [participants, setParticipants] = useState<Participant[]>(defaultParticipants);
   const [timerState, setTimerState] = useState<TimerState>(defaultTimerState);
   const [isLoading, setIsLoading] = useState(true);
   const [useLocalMode, setUseLocalMode] = useState(false);
+  const hasPlayedSound = useRef<Set<string>>(new Set());
 
   // Calculate current remaining time based on started_at timestamp
   const calculateRemainingTime = useCallback((participant: Participant, state: TimerState): number => {
@@ -35,6 +70,24 @@ export function useDebateTimer() {
     const elapsed = Math.floor((Date.now() - new Date(state.started_at).getTime()) / 1000);
     return Math.max(0, participant.remaining_time - elapsed);
   }, []);
+
+  // Check if any timer has finished and play sound
+  useEffect(() => {
+    if (timerState.status !== 'running' || !timerState.current_speaker_id) return;
+
+    const currentSpeaker = participants.find(p => p.id === timerState.current_speaker_id);
+    if (!currentSpeaker) return;
+
+    const checkInterval = setInterval(() => {
+      const remaining = calculateRemainingTime(currentSpeaker, timerState);
+      if (remaining === 0 && !hasPlayedSound.current.has(currentSpeaker.id)) {
+        hasPlayedSound.current.add(currentSpeaker.id);
+        playBeepSound();
+      }
+    }, 500);
+
+    return () => clearInterval(checkInterval);
+  }, [timerState, participants, calculateRemainingTime]);
 
   // Fetch initial data from Supabase
   const fetchData = useCallback(async () => {
@@ -70,6 +123,7 @@ export function useDebateTimer() {
           total_time: p.total_time,
           remaining_time: p.remaining_time,
           color: p.color || undefined,
+          has_spoken: (p as ParticipantRow & { has_spoken?: boolean }).has_spoken || false,
         })));
       }
 
@@ -77,7 +131,7 @@ export function useDebateTimer() {
         setTimerState({
           id: timerData.id,
           current_speaker_id: timerData.current_speaker_id,
-          status: timerData.status as 'running' | 'paused' | 'stopped',
+          status: timerData.status as 'running' | 'paused' | 'stopped' | 'finished',
           started_at: timerData.started_at,
           updated_at: timerData.updated_at,
         });
@@ -104,12 +158,36 @@ export function useDebateTimer() {
         { event: '*', schema: 'public', table: 'participants' },
         (payload) => {
           if (payload.eventType === 'UPDATE') {
-            const updated = payload.new as ParticipantRow;
+            const updated = payload.new as ParticipantRow & { has_spoken?: boolean };
             setParticipants(prev => prev.map(p => 
               p.id === updated.id 
-                ? { ...p, remaining_time: updated.remaining_time, name: updated.name }
+                ? { 
+                    ...p, 
+                    remaining_time: updated.remaining_time, 
+                    name: updated.name,
+                    total_time: updated.total_time,
+                    color: updated.color || p.color,
+                    has_spoken: updated.has_spoken || false,
+                  }
                 : p
             ));
+          } else if (payload.eventType === 'INSERT') {
+            const inserted = payload.new as ParticipantRow & { has_spoken?: boolean };
+            setParticipants(prev => {
+              // Check if participant already exists
+              if (prev.some(p => p.id === inserted.id)) return prev;
+              return [...prev, {
+                id: inserted.id,
+                name: inserted.name,
+                total_time: inserted.total_time,
+                remaining_time: inserted.remaining_time,
+                color: inserted.color || undefined,
+                has_spoken: inserted.has_spoken || false,
+              }];
+            });
+          } else if (payload.eventType === 'DELETE') {
+            const deleted = payload.old as { id: string };
+            setParticipants(prev => prev.filter(p => p.id !== deleted.id));
           }
         }
       )
@@ -122,7 +200,7 @@ export function useDebateTimer() {
             setTimerState({
               id: updated.id,
               current_speaker_id: updated.current_speaker_id,
-              status: updated.status as 'running' | 'paused' | 'stopped',
+              status: updated.status as 'running' | 'paused' | 'stopped' | 'finished',
               started_at: updated.started_at,
               updated_at: updated.updated_at,
             });
@@ -141,7 +219,11 @@ export function useDebateTimer() {
     const now = new Date().toISOString();
     const supabase = getSupabase();
     
+    // Mark participant as has_spoken
     if (useLocalMode || !supabase) {
+      setParticipants(prev => prev.map(p => 
+        p.id === participantId ? { ...p, has_spoken: true } : p
+      ));
       setTimerState(prev => ({
         ...prev,
         current_speaker_id: participantId,
@@ -153,6 +235,12 @@ export function useDebateTimer() {
     }
 
     try {
+      // Mark as has_spoken
+      await supabase
+        .from('participants')
+        .update({ has_spoken: true })
+        .eq('id', participantId);
+
       await supabase
         .from('timer_state')
         .upsert({
@@ -293,8 +381,11 @@ export function useDebateTimer() {
     await stopTimer();
     const supabase = getSupabase();
     
+    // Reset sound tracking
+    hasPlayedSound.current.clear();
+    
     if (useLocalMode || !supabase) {
-      setParticipants(prev => prev.map(p => ({ ...p, remaining_time: p.total_time })));
+      setParticipants(prev => prev.map(p => ({ ...p, remaining_time: p.total_time, has_spoken: false })));
       return;
     }
 
@@ -302,7 +393,7 @@ export function useDebateTimer() {
       for (const p of participants) {
         await supabase
           .from('participants')
-          .update({ remaining_time: p.total_time })
+          .update({ remaining_time: p.total_time, has_spoken: false })
           .eq('id', p.id);
       }
     } catch (error) {
@@ -319,6 +410,7 @@ export function useDebateTimer() {
       total_time: totalTime,
       remaining_time: totalTime,
       color,
+      has_spoken: false,
     };
     const supabase = getSupabase();
 
@@ -336,7 +428,10 @@ export function useDebateTimer() {
           total_time: totalTime,
           remaining_time: totalTime,
           color,
+          has_spoken: false,
         });
+      // Refetch to get synced data
+      fetchData();
     } catch (error) {
       console.error('Error adding participant:', error);
     }
@@ -387,6 +482,29 @@ export function useDebateTimer() {
     }
   };
 
+  // Update participant's name
+  const updateParticipantName = async (participantId: string, name: string) => {
+    const supabase = getSupabase();
+
+    if (useLocalMode || !supabase) {
+      setParticipants(prev => prev.map(p => 
+        p.id === participantId 
+          ? { ...p, name } 
+          : p
+      ));
+      return;
+    }
+
+    try {
+      await supabase
+        .from('participants')
+        .update({ name })
+        .eq('id', participantId);
+    } catch (error) {
+      console.error('Error updating participant name:', error);
+    }
+  };
+
   return {
     participants,
     timerState,
@@ -402,5 +520,6 @@ export function useDebateTimer() {
     addParticipant,
     removeParticipant,
     updateParticipantTime,
+    updateParticipantName,
   };
 }

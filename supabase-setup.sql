@@ -6,19 +6,20 @@
 
 -- 1. Criar tabela de participantes
 CREATE TABLE IF NOT EXISTS participants (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
   name TEXT NOT NULL,
   total_time INTEGER NOT NULL DEFAULT 120,
   remaining_time INTEGER NOT NULL DEFAULT 120,
   color TEXT DEFAULT '#3498db',
+  has_spoken BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 -- 2. Criar tabela de estado do timer
 CREATE TABLE IF NOT EXISTS timer_state (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  current_speaker_id UUID REFERENCES participants(id) ON DELETE SET NULL,
-  status TEXT NOT NULL DEFAULT 'stopped' CHECK (status IN ('running', 'paused', 'stopped')),
+  id TEXT PRIMARY KEY DEFAULT '1',
+  current_speaker_id TEXT REFERENCES participants(id) ON DELETE SET NULL,
+  status TEXT NOT NULL DEFAULT 'stopped' CHECK (status IN ('running', 'paused', 'stopped', 'finished')),
   started_at TIMESTAMP WITH TIME ZONE,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -63,23 +64,64 @@ CREATE POLICY "Allow public update on timer_state"
   ON timer_state FOR UPDATE 
   USING (true);
 
--- 5. Habilitar Realtime para as tabelas
+-- =============================================
+-- 5. HABILITAR REALTIME - CRÍTICO!
+-- =============================================
+-- Isto é o que permite a sincronização em tempo real entre dispositivos
+
+-- Primeiro, remover as tabelas da publicação se já existirem (evita erros)
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM pg_publication_tables 
+    WHERE pubname = 'supabase_realtime' AND tablename = 'participants'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime DROP TABLE participants;
+  END IF;
+  
+  IF EXISTS (
+    SELECT 1 FROM pg_publication_tables 
+    WHERE pubname = 'supabase_realtime' AND tablename = 'timer_state'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime DROP TABLE timer_state;
+  END IF;
+END $$;
+
+-- Agora adicionar as tabelas à publicação realtime
 ALTER PUBLICATION supabase_realtime ADD TABLE participants;
 ALTER PUBLICATION supabase_realtime ADD TABLE timer_state;
 
--- 6. Inserir participantes de exemplo
-INSERT INTO participants (name, total_time, remaining_time, color) VALUES
-  ('Grupo A', 120, 120, '#3498db'),
-  ('Grupo B', 120, 120, '#e74c3c'),
-  ('Grupo C', 120, 120, '#2ecc71'),
-  ('Grupo D', 120, 120, '#f39c12');
-
--- 7. Inserir estado inicial do timer
-INSERT INTO timer_state (status) VALUES ('stopped');
+-- =============================================
+-- 6. Configurar REPLICA IDENTITY para DELETE funcionar
+-- =============================================
+ALTER TABLE participants REPLICA IDENTITY FULL;
+ALTER TABLE timer_state REPLICA IDENTITY FULL;
 
 -- =============================================
--- VERIFICAÇÃO
+-- 7. Inserir dados iniciais (se não existirem)
 -- =============================================
--- Depois de executar, verifique se as tabelas foram criadas:
--- SELECT * FROM participants;
--- SELECT * FROM timer_state;
+INSERT INTO timer_state (id, status) 
+VALUES ('1', 'stopped')
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO participants (id, name, total_time, remaining_time, color, has_spoken) VALUES
+  ('1', 'Grupo A', 120, 120, '#3498db', FALSE),
+  ('2', 'Grupo B', 120, 120, '#e74c3c', FALSE),
+  ('3', 'Grupo C', 120, 120, '#2ecc71', FALSE),
+  ('4', 'Grupo D', 120, 120, '#f39c12', FALSE)
+ON CONFLICT (id) DO NOTHING;
+
+-- =============================================
+-- VERIFICAÇÃO DO REALTIME
+-- =============================================
+-- Execute esta query para verificar se as tabelas estão na publicação:
+-- SELECT * FROM pg_publication_tables WHERE pubname = 'supabase_realtime';
+
+-- =============================================
+-- MIGRAÇÃO (para bases de dados existentes)
+-- =============================================
+-- Se já tiver as tabelas criadas com UUID, execute:
+-- 
+-- DROP TABLE IF EXISTS timer_state;
+-- DROP TABLE IF EXISTS participants;
+-- E depois execute o script completo acima

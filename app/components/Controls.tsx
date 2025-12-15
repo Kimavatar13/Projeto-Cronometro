@@ -16,9 +16,28 @@ interface ControlsProps {
   onAddParticipant: (name: string, totalTime: number, color?: string) => void;
   onRemoveParticipant: (participantId: string) => void;
   onUpdateParticipantTime: (participantId: string, totalTime: number) => void;
+  onUpdateParticipantName: (participantId: string, name: string) => void;
 }
 
 const COLORS = ['#3498db', '#e74c3c', '#2ecc71', '#f39c12', '#9b59b6', '#1abc9c', '#e91e63', '#00bcd4'];
+
+// Helper to parse MM:SS to seconds
+const parseTimeInput = (value: string): number => {
+  if (value.includes(':')) {
+    const parts = value.split(':');
+    const mins = parseInt(parts[0]) || 0;
+    const secs = parseInt(parts[1]) || 0;
+    return mins * 60 + secs;
+  }
+  return parseInt(value) || 0;
+};
+
+// Helper to format seconds to MM:SS for input
+const formatTimeForInput = (seconds: number): string => {
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${mins}:${secs.toString().padStart(2, '0')}`;
+};
 
 export default function Controls({
   participants,
@@ -32,16 +51,20 @@ export default function Controls({
   onAddParticipant,
   onRemoveParticipant,
   onUpdateParticipantTime,
+  onUpdateParticipantName,
 }: ControlsProps) {
   const [newName, setNewName] = useState('');
-  const [newTime, setNewTime] = useState(120);
+  const [newTimeInput, setNewTimeInput] = useState('2:00');
   const [selectedColor, setSelectedColor] = useState(COLORS[0]);
   const [editingTime, setEditingTime] = useState<string | null>(null);
-  const [editTimeValue, setEditTimeValue] = useState(0);
+  const [editTimeInput, setEditTimeInput] = useState('');
+  const [editingName, setEditingName] = useState<string | null>(null);
+  const [editNameValue, setEditNameValue] = useState('');
 
   const handleAddParticipant = () => {
     if (newName.trim()) {
-      onAddParticipant(newName.trim(), newTime, selectedColor);
+      const timeInSeconds = parseTimeInput(newTimeInput);
+      onAddParticipant(newName.trim(), timeInSeconds > 0 ? timeInSeconds : 120, selectedColor);
       setNewName('');
       setSelectedColor(COLORS[(COLORS.indexOf(selectedColor) + 1) % COLORS.length]);
     }
@@ -55,20 +78,37 @@ export default function Controls({
 
   const handleEditTime = (participant: Participant) => {
     setEditingTime(participant.id);
-    setEditTimeValue(participant.total_time);
+    setEditTimeInput(formatTimeForInput(participant.total_time));
   };
 
   const handleSaveTime = (participantId: string) => {
-    onUpdateParticipantTime(participantId, editTimeValue);
+    const timeInSeconds = parseTimeInput(editTimeInput);
+    if (timeInSeconds > 0) {
+      onUpdateParticipantTime(participantId, timeInSeconds);
+    }
     setEditingTime(null);
   };
 
   const handleCancelEdit = () => {
     setEditingTime(null);
+    setEditingName(null);
+  };
+
+  const handleEditName = (participant: Participant) => {
+    setEditingName(participant.id);
+    setEditNameValue(participant.name);
+  };
+
+  const handleSaveName = (participantId: string) => {
+    if (editNameValue.trim()) {
+      onUpdateParticipantName(participantId, editNameValue.trim());
+    }
+    setEditingName(null);
   };
 
   const isRunning = timerState.status === 'running';
   const isPaused = timerState.status === 'paused';
+  const isFinished = timerState.status === 'finished';
   const currentSpeaker = participants.find(p => p.id === timerState.current_speaker_id);
 
   return (
@@ -79,11 +119,13 @@ export default function Controls({
         <div className={styles.statusInfo}>
           <span className={`${styles.statusBadge} ${styles[timerState.status]}`}>
             {timerState.status === 'running' ? '▶ A Correr' : 
-             timerState.status === 'paused' ? '⏸ Pausado' : '⏹ Parado'}
+             timerState.status === 'paused' ? '⏸ Pausado' : 
+             timerState.status === 'finished' ? '✓ Terminado' : '⏹ Parado'}
           </span>
           {currentSpeaker && (
             <span className={styles.currentSpeaker}>
               A falar: <strong style={{ color: currentSpeaker.color }}>{currentSpeaker.name}</strong>
+              {currentSpeaker.has_spoken && <span className={styles.spokenBadge}> (já falou)</span>}
             </span>
           )}
         </div>
@@ -115,34 +157,70 @@ export default function Controls({
 
       {/* Participants List */}
       <div className={styles.participantsList}>
-        <h3>Participantes</h3>
+        <h3>Participantes ({participants.filter(p => p.has_spoken).length}/{participants.length} já falaram)</h3>
         {participants.map((participant) => {
           const isActive = timerState.current_speaker_id === participant.id;
-          const isEditing = editingTime === participant.id;
+          const isEditingThisTime = editingTime === participant.id;
+          const isEditingThisName = editingName === participant.id;
+          const hasFinished = participant.remaining_time === 0;
           return (
             <div 
               key={participant.id} 
-              className={`${styles.participantCard} ${isActive ? styles.active : ''}`}
+              className={`${styles.participantCard} ${isActive ? styles.active : ''} ${participant.has_spoken ? styles.spoken : ''} ${hasFinished ? styles.finished : ''}`}
               style={{ borderColor: participant.color }}
             >
               <div className={styles.participantInfo}>
-                <span 
-                  className={styles.participantName}
-                  style={{ color: participant.color }}
-                >
-                  {participant.name}
-                </span>
-                {isEditing ? (
+                {isEditingThisName ? (
+                  <div className={styles.editNameRow}>
+                    <input
+                      type="text"
+                      value={editNameValue}
+                      onChange={(e) => setEditNameValue(e.target.value)}
+                      className={styles.editNameInput}
+                      autoFocus
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') handleSaveName(participant.id);
+                        if (e.key === 'Escape') handleCancelEdit();
+                      }}
+                    />
+                    <button 
+                      onClick={() => handleSaveName(participant.id)}
+                      className={`${styles.btn} ${styles.success} ${styles.small}`}
+                    >
+                      ✓
+                    </button>
+                    <button 
+                      onClick={handleCancelEdit}
+                      className={`${styles.btn} ${styles.secondary} ${styles.small}`}
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ) : (
+                  <span 
+                    className={styles.participantName}
+                    style={{ color: participant.color }}
+                    onClick={() => handleEditName(participant)}
+                    title="Clique para editar o nome"
+                  >
+                    {participant.has_spoken && <span className={styles.checkmark}>✓ </span>}
+                    {participant.name} ✏️
+                  </span>
+                )}
+                {isEditingThisTime ? (
                   <div className={styles.editTimeRow}>
                     <input
-                      type="number"
-                      value={editTimeValue}
-                      onChange={(e) => setEditTimeValue(Number(e.target.value))}
-                      min={10}
-                      max={3600}
+                      type="text"
+                      value={editTimeInput}
+                      onChange={(e) => setEditTimeInput(e.target.value)}
+                      placeholder="M:SS"
                       className={styles.editTimeInput}
+                      autoFocus
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') handleSaveTime(participant.id);
+                        if (e.key === 'Escape') handleCancelEdit();
+                      }}
                     />
-                    <span className={styles.editTimeLabel}>seg</span>
                     <button 
                       onClick={() => handleSaveTime(participant.id)}
                       className={`${styles.btn} ${styles.success} ${styles.small}`}
@@ -207,15 +285,17 @@ export default function Controls({
             onChange={(e) => setNewName(e.target.value)}
             placeholder="Nome do grupo..."
             className={styles.input}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') handleAddParticipant();
+            }}
           />
           <div className={styles.timeInput}>
-            <label>Tempo (segundos):</label>
+            <label>Tempo (M:SS ou segundos):</label>
             <input
-              type="number"
-              value={newTime}
-              onChange={(e) => setNewTime(Number(e.target.value))}
-              min={10}
-              max={3600}
+              type="text"
+              value={newTimeInput}
+              onChange={(e) => setNewTimeInput(e.target.value)}
+              placeholder="2:00"
               className={styles.input}
             />
           </div>

@@ -312,3 +312,61 @@
   font-size: 0.8rem;
   color: #888;
 }
+
+/* Edit Name Styles */
+.editNameRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.editNameInput {
+  width: 150px;
+  padding: 0.4rem 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  font-size: 0.9rem;
+}
+
+.editNameInput:focus {
+  outline: none;
+  border-color: #3498db;
+}
+
+/* Participant name editable */
+.participantName {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.participantName:hover {
+  opacity: 0.8;
+}
+
+/* Spoken badge */
+.spokenBadge {
+  font-size: 0.75rem;
+  color: #888;
+  font-weight: normal;
+}
+
+.checkmark {
+  color: #2ecc71;
+}
+
+/* Participant card states */
+.participantCard.spoken {
+  opacity: 0.7;
+}
+
+.participantCard.finished {
+  background: rgba(231, 76, 60, 0.1);
+}
+
+/* Status badge for finished */
+.statusBadge.finished {
+  background: rgba(46, 204, 113, 0.2);
+  color: #2ecc71;
+}
