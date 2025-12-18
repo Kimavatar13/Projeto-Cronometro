@@ -4,6 +4,32 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { Participant, TimerState, ParticipantRow, TimerStateRow } from './types';
 import { getSupabase, isSupabaseConfigured } from './supabase';
 
+// LocalStorage keys
+const STORAGE_KEYS = {
+  PARTICIPANTS: 'debate-timer-participants',
+  TIMER_STATE: 'debate-timer-state',
+};
+
+// Helper functions for localStorage
+const loadFromStorage = <T>(key: string, defaultValue: T): T => {
+  if (typeof window === 'undefined') return defaultValue;
+  try {
+    const stored = localStorage.getItem(key);
+    return stored ? JSON.parse(stored) : defaultValue;
+  } catch {
+    return defaultValue;
+  }
+};
+
+const saveToStorage = <T>(key: string, value: T): void => {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch (err) {
+    console.error('Error saving to localStorage:', err);
+  }
+};
+
 // Default participants for demo mode
 const defaultParticipants: Participant[] = [
   { id: '1', name: 'Grupo A', total_time: 120, remaining_time: 120, color: '#3498db', has_spoken: false },
@@ -60,6 +86,34 @@ export function useDebateTimer() {
   const [isLoading, setIsLoading] = useState(true);
   const [useLocalMode, setUseLocalMode] = useState(false);
   const hasPlayedSound = useRef<Set<string>>(new Set());
+  const isInitialized = useRef(false);
+
+  // Load data from localStorage on mount (for local mode)
+  useEffect(() => {
+    if (isInitialized.current) return;
+    isInitialized.current = true;
+    
+    if (!isSupabaseConfigured()) {
+      const storedParticipants = loadFromStorage<Participant[]>(STORAGE_KEYS.PARTICIPANTS, defaultParticipants);
+      const storedTimerState = loadFromStorage<TimerState>(STORAGE_KEYS.TIMER_STATE, defaultTimerState);
+      setParticipants(storedParticipants);
+      setTimerState(storedTimerState);
+    }
+  }, []);
+
+  // Save participants to localStorage whenever they change (in local mode)
+  useEffect(() => {
+    if (useLocalMode && !isLoading) {
+      saveToStorage(STORAGE_KEYS.PARTICIPANTS, participants);
+    }
+  }, [participants, useLocalMode, isLoading]);
+
+  // Save timer state to localStorage whenever it changes (in local mode)
+  useEffect(() => {
+    if (useLocalMode && !isLoading) {
+      saveToStorage(STORAGE_KEYS.TIMER_STATE, timerState);
+    }
+  }, [timerState, useLocalMode, isLoading]);
 
   // Calculate current remaining time based on started_at timestamp
   const calculateRemainingTime = useCallback((participant: Participant, state: TimerState): number => {
