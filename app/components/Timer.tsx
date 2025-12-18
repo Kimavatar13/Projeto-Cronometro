@@ -33,31 +33,36 @@ export default function Timer({
     if (!isActive || !isRunning) return;
 
     const interval = setInterval(() => {
-      setDisplayTime(prev => Math.max(0, prev - 1));
+      setDisplayTime(prev => prev - 1); // Allow negative time
     }, 1000);
 
     return () => clearInterval(interval);
   }, [remainingTime, isActive, isRunning]);
 
-  // Format time as MM:SS
+  // Format time as MM:SS (supports negative)
   const formatTime = (seconds: number): string => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    const isNegative = seconds < 0;
+    const absSeconds = Math.abs(seconds);
+    const mins = Math.floor(absSeconds / 60);
+    const secs = absSeconds % 60;
+    const timeStr = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    return isNegative ? `-${timeStr}` : timeStr;
   };
 
-  // Calculate percentage for color
-  const percentage = totalTime > 0 ? (displayTime / totalTime) * 100 : 0;
+  // Calculate percentage for color (clamp to 0 for negative times)
+  const percentage = totalTime > 0 ? Math.max(0, (displayTime / totalTime) * 100) : 0;
+  const isNegative = displayTime < 0;
 
   // Determine timer color based on remaining percentage
   const getTimerColor = (): string => {
+    if (isNegative) return '#e74c3c'; // Red for negative
     if (percentage > 50) return '#2ecc71'; // Green
     if (percentage > 10) return '#f39c12'; // Yellow/Orange
     return '#e74c3c'; // Red
   };
 
-  // Check if should blink (last 10 seconds)
-  const shouldBlink = displayTime <= 10 && displayTime > 0 && isRunning;
+  // Check if should blink (last 10 seconds or negative)
+  const shouldBlink = (displayTime <= 10 && displayTime > 0 && isRunning) || (isNegative && isRunning);
 
   const timerClasses = [
     styles.timer,
@@ -93,8 +98,10 @@ export default function Timer({
           />
         </div>
       )}
-      {displayTime === 0 && (
-        <div className={styles.timeUp}>TEMPO ESGOTADO!</div>
+      {displayTime <= 0 && (
+        <div className={styles.timeUp}>
+          {displayTime < 0 ? 'TEMPO EXCEDIDO!' : 'TEMPO ESGOTADO!'}
+        </div>
       )}
     </div>
   );

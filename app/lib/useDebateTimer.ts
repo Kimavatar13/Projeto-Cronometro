@@ -68,7 +68,7 @@ export function useDebateTimer() {
     }
     
     const elapsed = Math.floor((Date.now() - new Date(state.started_at).getTime()) / 1000);
-    return Math.max(0, participant.remaining_time - elapsed);
+    return participant.remaining_time - elapsed; // Allow negative time
   }, []);
 
   // Check if any timer has finished and play sound
