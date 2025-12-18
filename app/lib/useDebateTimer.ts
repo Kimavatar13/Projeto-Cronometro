@@ -412,10 +412,13 @@ export function useDebateTimer() {
       color,
       has_spoken: false,
     };
+    
+    // Always update local state first for immediate feedback
+    setParticipants(prev => [...prev, newParticipant]);
+    
     const supabase = getSupabase();
 
     if (useLocalMode || !supabase) {
-      setParticipants(prev => [...prev, newParticipant]);
       return;
     }
 
@@ -430,10 +433,10 @@ export function useDebateTimer() {
           color,
           has_spoken: false,
         });
-      // Refetch to get synced data
-      fetchData();
     } catch (error) {
       console.error('Error adding participant:', error);
+      // Revert local state on error
+      setParticipants(prev => prev.filter(p => p.id !== newId));
     }
   };
 
@@ -442,10 +445,16 @@ export function useDebateTimer() {
     if (timerState.current_speaker_id === participantId) {
       await stopTimer();
     }
+    
+    // Store participant for potential rollback
+    const removedParticipant = participants.find(p => p.id === participantId);
+    
+    // Always update local state first for immediate feedback
+    setParticipants(prev => prev.filter(p => p.id !== participantId));
+    
     const supabase = getSupabase();
 
     if (useLocalMode || !supabase) {
-      setParticipants(prev => prev.filter(p => p.id !== participantId));
       return;
     }
 
@@ -456,6 +465,10 @@ export function useDebateTimer() {
         .eq('id', participantId);
     } catch (error) {
       console.error('Error removing participant:', error);
+      // Revert local state on error
+      if (removedParticipant) {
+        setParticipants(prev => [...prev, removedParticipant]);
+      }
     }
   };
 
